@@ -116,7 +116,7 @@ void DIJKSTRA_NODE::print(ostream &out) const {
     << "   Connections:" << "\n";
     for(unsigned int i = 0; i<connections.size(); i++){
         out << "     ";
-        connections.at(i).print();
+        connections.at(i).print(out);
     }
 }
 

@@ -70,6 +70,11 @@ bool deltaPosLessThan (DELTA_POS p1, DELTA_POS p2) {
 /* Begin of CONN functionality */
 /** Class used to represent a connection between DIJKSTRA_NODES. */
 
+/* ML added: default init of CONN */
+CONN::CONN()
+{
+}
+
 /* Create a CONN using the provided parameters */
 CONN::CONN(int myFrom, int myTo, double len, double maxR, DELTA_POS deltaP){
     from       = myFrom;
@@ -143,7 +148,7 @@ void DIJKSTRA_NETWORK::buildDijkstraNetwork(const VORONOI_NETWORK *vornet, DIJKS
     vector<VOR_NODE> ::const_iterator niter = vornet->nodes.begin();
     int i = 0;
     dnet->nodes.clear();
-    
+
     // Add copies of all nodes to the network
     while(niter != vornet->nodes.end()){
         DIJKSTRA_NODE node = DIJKSTRA_NODE(i, niter->x, niter->y, niter->z, niter->rad_stat_sphere, niter->active);
@@ -151,7 +156,7 @@ void DIJKSTRA_NETWORK::buildDijkstraNetwork(const VORONOI_NETWORK *vornet, DIJKS
         niter++;
         dnet->nodes.push_back(node);
     }
-    
+
     // For each edge, store it in the DIJKSTRA node's list of connections that the connection
     // stems from
     vector<VOR_EDGE> ::const_iterator eiter = vornet->edges.begin();
@@ -161,7 +166,7 @@ void DIJKSTRA_NETWORK::buildDijkstraNetwork(const VORONOI_NETWORK *vornet, DIJKS
         dnet->nodes.at(conn.from).connections.push_back(conn);
         eiter++;
     }
-    
+
     // Copy the unit cell vectors into the DIJKSTRA_NETWORK
     dnet->v_a = vornet->v_a;
     dnet->v_b = vornet->v_b;

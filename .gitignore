@@ -1,0 +1,22 @@
+# Executables
+network
+voro++
+!voro++/
+framework_builder
+molecule_to_abstract
+
+# Prerequisites
+*.d
+
+# Object files
+*.o
+*.ko
+*.obj
+*.elf
+
+# Libraries
+*.lib
+*.a
+*.la
+*.lo
+

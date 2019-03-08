@@ -32,9 +32,9 @@ PATH::PATH(DIJKSTRA_NODE cNode, double maxRadius, double maxIncRadius, double le
 /* ML mod: Create a PATH with the provided previous/corrent original nodes, next connection, current node, radius and length.*/
 PATH::PATH(DIJKSTRA_NODE stOrigNode, DIJKSTRA_NODE cuOrigNode, CONN thisConn, DIJKSTRA_NODE cNode, double maxRadius, double maxIncRadius, double len)
 {
-  startOriginalNode = stOrigNode;
-  currentOriginalNode = cuOrigNode;
-  conn = thisConn;
+  bestStartNode = stOrigNode;
+  bestEndNode = cuOrigNode;
+  bestConn = thisConn;
   currentNode = cNode;
   max_radius = maxRadius;
   max_inc_radius = maxIncRadius;
@@ -237,7 +237,7 @@ pair<bool,PATH> TRAVERSAL_NETWORK::findMaxFreeSphere(map<int,int> *idAliases, se
   HEAP<PATH> heap (hasLowerMaxR);
   bool NtoN = false;
 
-  CONN bestOrigConn; // ML mod
+  CONN bestConn; // ML mod
   DIJKSTRA_NODE bestCurrNode; // ML mod
   DIJKSTRA_NODE bestNextNode; // ML mod
 
@@ -247,11 +247,12 @@ pair<bool,PATH> TRAVERSAL_NETWORK::findMaxFreeSphere(map<int,int> *idAliases, se
   {
     DIJKSTRA_NODE sourceNode = dnet->nodes.at(sourceNodeIDs.at(i));
     vector<CONN> viableConns = connectToSink.at(sourceNode.id);
+    //cout << "Source node: " << idAliases->find(sourceNode.id)->first << " " << idAliases->find(sourceNode.id)->second << endl; // ML mod debug
     // For each viable connection
     for(unsigned int j = 0; j <  viableConns.size(); j++)
     {
       CONN nextConn = viableConns.at(j);
-      nextConn.print(cout); // ML
+      //nextConn.print(cout); // ML mod debug
       DIJKSTRA_NODE nextNode = dnet->nodes.at(nextConn.to);
       //PATH newPath = PATH(nextNode, nextConn.max_radius, max(sourceNode.max_radius, nextNode.max_radius), nextConn.length);
       PATH newPath = PATH(sourceNode, nextNode, nextConn, nextNode, nextConn.max_radius, max(sourceNode.max_radius, nextNode.max_radius), nextConn.length);
@@ -259,13 +260,13 @@ pair<bool,PATH> TRAVERSAL_NETWORK::findMaxFreeSphere(map<int,int> *idAliases, se
       newPath.visitedSourceIDs.insert(idAliases->find(sourceNode.id)->second);
       heap.insert(newPath);
     }
-    cout << " Finished connections for this source node" << endl; // ML
+    //cout << " Finished connections for this source node" << endl; // ML mod debug
   }
-  cout << " Finished source nodes" << endl; // ML
+  //cout << " Finished source nodes" << endl; // ML mod debug
 
   while(heap.size() != 0)
   {
-    cout << endl << " Popping new best from heap, heap size " << heap.size() << endl; //ML
+    //cout << endl << " Popping new best from heap, heap size " << heap.size() << endl; // ML mod debug
     PATH best = heap.pop(); // take the current best path from the heap
 
     //Done searching if max radius path leads to sink node
@@ -273,7 +274,7 @@ pair<bool,PATH> TRAVERSAL_NETWORK::findMaxFreeSphere(map<int,int> *idAliases, se
     {
       best.visitedIDs.push_back(best.currentNode.id);
       bestPath = best;
-      cout << " Max radius path leads to sink, BREAK \n" << endl;
+      //cout << " Max radius path leads to sink, BREAK \n" << endl; // ML mod debug
       break;
     }
 
@@ -287,18 +288,20 @@ pair<bool,PATH> TRAVERSAL_NETWORK::findMaxFreeSphere(map<int,int> *idAliases, se
     if(sourceNodes->find(best.currentNode.id) != sourceNodes->end()) // if current node is a source node
     {
       int origID = idAliases->find(best.currentNode.id)->second; // get original node ID from current node in extended net
+      //cout << "origID: " << origID << endl; // ML mod debug
       if(best.visitedSourceIDs.find(origID) != best.visitedSourceIDs.end()) // if original node has been visited in this path
       {
+        // then an NtoN traversal has been found
         // store current node in list of visited nodes and break
         best.visitedIDs.push_back(best.currentNode.id);
         bestPath = best;
-        cout << " Max radius path leads to sink, NtoN path! BREAK \n" << endl;
+        //cout << " Max radius path leads to sink, NtoN path! BREAK \n" << endl; // ML mod debug
         NtoN = true;
         break;
       }
-      else
+      else // original node has not been visited, but is still a source node
       {
-        best.visitedSourceIDs.insert(origID); // store node in list of visited SOURCE nodes
+        best.visitedSourceIDs.insert(origID); // store node in list of visited source nodes
       }
     }
 
@@ -309,7 +312,7 @@ pair<bool,PATH> TRAVERSAL_NETWORK::findMaxFreeSphere(map<int,int> *idAliases, se
     // Iterate over all regular connections at this node
     for(unsigned int i = 0; i < regConns.size(); i++)
     {
-      cout << endl << " Iterate over regular connections for node " << i << endl;
+      //cout << endl << " Iterate over regular connections for node " << i << endl; // ML mod debug
       CONN nextConn = regConns.at(i);
       if(!haveVisited.at(nextConn.to)) // If this node hasn't been visited at all
       {
@@ -318,33 +321,29 @@ pair<bool,PATH> TRAVERSAL_NETWORK::findMaxFreeSphere(map<int,int> *idAliases, se
         // FIXME
         if (nextConn.max_radius < best.max_radius)
         {
-          nextConn.print(cout);
-          int bestCurrOrigID = idAliases->find(best.currentNode.id)->second; // get original node ID from current node in extended net
-          int bestNextOrigID = idAliases->find(nextNode.id)->second; // get original node ID from current node in extended net
-          bestOrigConn = nextConn; // FIXME alias to original connection?
-          //bestCurrNode = dnet->nodes[bestCurrOrigID];
-          //bestNextNode = dnet->nodes[bestNextOrigID];
+          //nextConn.print(cout); // ML mod debug
+          bestConn = nextConn; // FIXME alias to original connection?
           bestCurrNode = best.currentNode;
           bestNextNode = nextNode;
         }
         else
         {
-          bestOrigConn = best.conn; // FIXME alias to original connection?
-          bestCurrNode = best.startOriginalNode;
-          bestNextNode = best.currentOriginalNode;
+          bestConn = best.bestConn; // FIXME alias to original connection?
+          bestCurrNode = best.bestStartNode;
+          bestNextNode = best.bestEndNode;
         }
         //PATH nextPath = PATH(nextNode, min(best.max_radius, nextConn.max_radius), max(best.max_inc_radius, nextNode.max_radius), best.length + nextConn.length);
-        PATH nextPath = PATH(bestCurrNode, bestNextNode, bestOrigConn, nextNode, min(best.max_radius, nextConn.max_radius), max(best.max_inc_radius, nextNode.max_radius), best.length + nextConn.length);
+        PATH nextPath = PATH(bestCurrNode, bestNextNode, bestConn, nextNode, min(best.max_radius, nextConn.max_radius), max(best.max_inc_radius, nextNode.max_radius), best.length + nextConn.length);
         nextPath.visitedSourceIDs = best.visitedSourceIDs;
         nextPath.visitedIDs = best.visitedIDs;
         heap.insert(nextPath);
       }
     }
-    cout << endl << " Finished with regular connections for all nodes" << endl << endl;
+    //cout << endl << " Finished with regular connections for all nodes" << endl << endl; // ML mod debug
 
     // Add all nodes that are connected in the sink to the stack
     vector<CONN> sinkConns = connectToSink.at(best.currentNode.id);
-    cout << " Iterate over connections to sink \n" << endl;
+    //cout << " Iterate over connections to sink \n" << endl; // ML mod debug
     for(unsigned int i = 0; i < sinkConns.size(); i++)
     {
       CONN nextConn = sinkConns.at(i);
@@ -352,28 +351,24 @@ pair<bool,PATH> TRAVERSAL_NETWORK::findMaxFreeSphere(map<int,int> *idAliases, se
       //PATH nextPath = PATH(nextNode, min(best.max_radius, nextConn.max_radius), max(best.max_inc_radius, nextNode.max_radius), best.length + nextConn.length);
       if (nextConn.max_radius < best.max_radius)
       {
-        nextConn.print(cout);
-        int bestCurrOrigID = idAliases->find(best.currentNode.id)->second; // get original node ID from current node in extended net
-        int bestNextOrigID = idAliases->find(nextNode.id)->second; // get original node ID from current node in extended net
-        bestOrigConn = nextConn; // FIXME alias to original connection?
-        //bestCurrNode = dnet->nodes[bestCurrOrigID];
-        //bestNextNode = dnet->nodes[bestNextOrigID];
+        //nextConn.print(cout); // ML mod debug
+        bestConn = nextConn; // FIXME alias to original connection?
         bestCurrNode = best.currentNode;
         bestNextNode = nextNode;
       }
       else
       {
-        bestOrigConn = best.conn; // FIXME alias to original connection?
-        bestCurrNode = best.startOriginalNode;
-        bestNextNode = best.currentOriginalNode;
+        bestConn = best.bestConn; // FIXME alias to original connection?
+        bestCurrNode = best.bestStartNode;
+        bestNextNode = best.bestEndNode;
       }
-      PATH nextPath = PATH(bestCurrNode, bestNextNode, bestOrigConn, nextNode, min(best.max_radius, nextConn.max_radius), max(best.max_inc_radius, nextNode.max_radius), best.length + nextConn.length);
+      PATH nextPath = PATH(bestCurrNode, bestNextNode, bestConn, nextNode, min(best.max_radius, nextConn.max_radius), max(best.max_inc_radius, nextNode.max_radius), best.length + nextConn.length);
       nextPath.toSink = true;
       nextPath.visitedIDs = best.visitedIDs;
       nextPath.visitedSourceIDs = best.visitedSourceIDs;
       heap.insert(nextPath);
     }
-    cout << " Finish with connections to sink \n" << endl;
+    //cout << " Finish with connections to sink \n" << endl; // ML mod debug
 
   }
   return pair<bool,PATH> (NtoN,bestPath);

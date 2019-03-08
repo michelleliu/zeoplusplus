@@ -16,9 +16,9 @@
 class PATH {
   public:
     std::vector<DIJKSTRA_NODE> visitedNodes; // List of visited nodes
-    DIJKSTRA_NODE startOriginalNode;            // ML: source node from which path is constructed, in original box
-    DIJKSTRA_NODE currentOriginalNode;          // ML: next node to which path is constructed, in original box
-    CONN conn;                                  // ML: connector for path
+    DIJKSTRA_NODE bestStartNode;            // ML: source node from which path is constructed, in original box
+    DIJKSTRA_NODE bestEndNode;          // ML: next node to which path is constructed, in original box
+    CONN bestConn;                                  // ML: connector for path
     DIJKSTRA_NODE currentNode;          // Next node to be visited
     double max_radius;                  // Maximum radius of sphere that can travel along PATH
     double max_inc_radius;              // Maximum included sphere along PATH

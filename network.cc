@@ -394,10 +394,12 @@ void extendVorNet(VORONOI_NETWORK *vornet, VORONOI_NETWORK *newNet, DELTA_POS di
   newNet->v_c = vornet->v_c.scale(direction.z * factor);
 
   //Repeat copy process for each additional unit cell
+  //in total have factor+1 (or 11) cells in each direction
   int idCount = 0;
   for(int i = 0; i <= factor; i++){
 
     //Translate all of the Voronoi nodes and assign them new id's
+    //cout << "Translate all of the Voronoi nodes and assign them new id's" << endl; // ML mod debug
     for(int j = 0; j < numIDs; j++){
       VOR_NODE oldNode = vornet->nodes.at(j);
       VOR_NODE newNode;
@@ -408,10 +410,12 @@ void extendVorNet(VORONOI_NETWORK *vornet, VORONOI_NETWORK *newNet, DELTA_POS di
       newNet->nodes.push_back(newNode);
       if(sourceNodes->find(j) != sourceNodes->end()){
         sourceNodes->insert(idCount);
-        idAliases->insert(pair<int,int> (idCount,j));
+        idAliases->insert(pair<int,int> (idCount,j)); // gets source nodes in each direction
+        //cout << idCount << " " << j << endl; // ML mod debug
       }
       idCount++;
     }
+    //cout << endl; // ML mod debug
 
     //Translate all of the Voronoi edges, modifying the connectivity information as is appropriate
     for(unsigned int j = 0; j < vornet->edges.size(); j++){
@@ -457,8 +461,8 @@ void calculateFreeSphereParameters(VORONOI_NETWORK *vornet, char *filename, bool
   vector<double> freeRadResults;
   vector<double> incRadResults;
   vector<bool> NtoN;
-  vector<DIJKSTRA_NODE> currentNodeResults; // ML modified
-  vector<DIJKSTRA_NODE> nextNodeResults; // ML modified
+  vector<DIJKSTRA_NODE> startNodeResults; // ML modified
+  vector<DIJKSTRA_NODE> endNodeResults; // ML modified
   vector<CONN> connResults; // ML modified
 
   DELTA_POS directions [3] = {DELTA_POS(1,0,0), DELTA_POS(0,1,0), DELTA_POS(0,0,1)};
@@ -471,8 +475,7 @@ void calculateFreeSphereParameters(VORONOI_NETWORK *vornet, char *filename, bool
     DIJKSTRA_NETWORK dnet;
     DIJKSTRA_NETWORK::buildDijkstraNetwork(&newNet,&dnet);
 
-    // ML mod
-    cout << "number of nodes in dijkstra net " << dnet.nodes.size() << endl;
+    //cout << "Total number of nodes in dijkstra net " << dnet.nodes.size() << endl; // ML mod debug
 
     TRAVERSAL_NETWORK analyzeNet = TRAVERSAL_NETWORK(directions[i].x,directions[i].y,directions[i].z, &dnet);
     pair<bool,PATH> results = analyzeNet.findMaxFreeSphere(&idAliases, &sourceNodes);
@@ -482,9 +485,9 @@ void calculateFreeSphereParameters(VORONOI_NETWORK *vornet, char *filename, bool
     NtoN.push_back(results.first);
 
     // ML mod
-    currentNodeResults.push_back(results.second.startOriginalNode);
-    nextNodeResults.push_back(results.second.currentOriginalNode);
-    connResults.push_back(results.second.conn);
+    startNodeResults.push_back(results.second.bestStartNode);
+    endNodeResults.push_back(results.second.bestEndNode);
+    connResults.push_back(results.second.bestConn);
   }
 
   fstream output;
@@ -522,11 +525,13 @@ void calculateFreeSphereParameters(VORONOI_NETWORK *vornet, char *filename, bool
     for(unsigned int i = 0; i < incRadResults.size(); i++)
       output << incRadResults[i] << "  ";
 
-    for(unsigned int i = 0; i < currentNodeResults.size(); i++)
+    for(unsigned int i = 0; i < startNodeResults.size(); i++)
     {
       output << "\n";
-      currentNodeResults[i].print(output);
-      nextNodeResults[i].print(output);
+      startNodeResults[i].print(output);
+      output << "\n";
+      endNodeResults[i].print(output);
+      output << "\n";
       connResults[i].print(output);
     }
 

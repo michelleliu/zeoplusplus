@@ -247,12 +247,10 @@ pair<bool,PATH> TRAVERSAL_NETWORK::findMaxFreeSphere(map<int,int> *idAliases, se
   {
     DIJKSTRA_NODE sourceNode = dnet->nodes.at(sourceNodeIDs.at(i));
     vector<CONN> viableConns = connectToSink.at(sourceNode.id);
-    //cout << "Source node: " << idAliases->find(sourceNode.id)->first << " " << idAliases->find(sourceNode.id)->second << endl; // ML mod debug
     // For each viable connection
     for(unsigned int j = 0; j <  viableConns.size(); j++)
     {
       CONN nextConn = viableConns.at(j);
-      //nextConn.print(cout); // ML mod debug
       DIJKSTRA_NODE nextNode = dnet->nodes.at(nextConn.to);
       //PATH newPath = PATH(nextNode, nextConn.max_radius, max(sourceNode.max_radius, nextNode.max_radius), nextConn.length);
       PATH newPath = PATH(sourceNode, nextNode, nextConn, nextNode, nextConn.max_radius, max(sourceNode.max_radius, nextNode.max_radius), nextConn.length);
@@ -260,13 +258,10 @@ pair<bool,PATH> TRAVERSAL_NETWORK::findMaxFreeSphere(map<int,int> *idAliases, se
       newPath.visitedSourceIDs.insert(idAliases->find(sourceNode.id)->second);
       heap.insert(newPath);
     }
-    //cout << " Finished connections for this source node" << endl; // ML mod debug
   }
-  //cout << " Finished source nodes" << endl; // ML mod debug
 
   while(heap.size() != 0)
   {
-    //cout << endl << " Popping new best from heap, heap size " << heap.size() << endl; // ML mod debug
     PATH best = heap.pop(); // take the current best path from the heap
 
     //Done searching if max radius path leads to sink node
@@ -274,7 +269,6 @@ pair<bool,PATH> TRAVERSAL_NETWORK::findMaxFreeSphere(map<int,int> *idAliases, se
     {
       best.visitedIDs.push_back(best.currentNode.id);
       bestPath = best;
-      //cout << " Max radius path leads to sink, BREAK \n" << endl; // ML mod debug
       break;
     }
 
@@ -288,14 +282,12 @@ pair<bool,PATH> TRAVERSAL_NETWORK::findMaxFreeSphere(map<int,int> *idAliases, se
     if(sourceNodes->find(best.currentNode.id) != sourceNodes->end()) // if current node is a source node
     {
       int origID = idAliases->find(best.currentNode.id)->second; // get original node ID from current node in extended net
-      //cout << "origID: " << origID << endl; // ML mod debug
       if(best.visitedSourceIDs.find(origID) != best.visitedSourceIDs.end()) // if original node has been visited in this path
       {
         // then an NtoN traversal has been found
         // store current node in list of visited nodes and break
         best.visitedIDs.push_back(best.currentNode.id);
         bestPath = best;
-        //cout << " Max radius path leads to sink, NtoN path! BREAK \n" << endl; // ML mod debug
         NtoN = true;
         break;
       }
@@ -312,63 +304,59 @@ pair<bool,PATH> TRAVERSAL_NETWORK::findMaxFreeSphere(map<int,int> *idAliases, se
     // Iterate over all regular connections at this node
     for(unsigned int i = 0; i < regConns.size(); i++)
     {
-      //cout << endl << " Iterate over regular connections for node " << i << endl; // ML mod debug
       CONN nextConn = regConns.at(i);
       if(!haveVisited.at(nextConn.to)) // If this node hasn't been visited at all
       {
         DIJKSTRA_NODE nextNode = dnet->nodes[nextConn.to];
         // ML mod: If next connection has a smaller max radius, store this node pair and connection
-        // FIXME
         if (nextConn.max_radius < best.max_radius)
         {
-          //nextConn.print(cout); // ML mod debug
-          bestConn = nextConn; // FIXME alias to original connection?
+          bestConn = nextConn;
           bestCurrNode = best.currentNode;
           bestNextNode = nextNode;
         }
         else
         {
-          bestConn = best.bestConn; // FIXME alias to original connection?
+          bestConn = best.bestConn;
           bestCurrNode = best.bestStartNode;
           bestNextNode = best.bestEndNode;
         }
-        //PATH nextPath = PATH(nextNode, min(best.max_radius, nextConn.max_radius), max(best.max_inc_radius, nextNode.max_radius), best.length + nextConn.length);
         PATH nextPath = PATH(bestCurrNode, bestNextNode, bestConn, nextNode, min(best.max_radius, nextConn.max_radius), max(best.max_inc_radius, nextNode.max_radius), best.length + nextConn.length);
+        // end ML mod
+        //PATH nextPath = PATH(nextNode, min(best.max_radius, nextConn.max_radius), max(best.max_inc_radius, nextNode.max_radius), best.length + nextConn.length);
         nextPath.visitedSourceIDs = best.visitedSourceIDs;
         nextPath.visitedIDs = best.visitedIDs;
         heap.insert(nextPath);
       }
     }
-    //cout << endl << " Finished with regular connections for all nodes" << endl << endl; // ML mod debug
 
     // Add all nodes that are connected in the sink to the stack
     vector<CONN> sinkConns = connectToSink.at(best.currentNode.id);
-    //cout << " Iterate over connections to sink \n" << endl; // ML mod debug
     for(unsigned int i = 0; i < sinkConns.size(); i++)
     {
       CONN nextConn = sinkConns.at(i);
       DIJKSTRA_NODE nextNode = dnet->nodes[nextConn.to];
-      //PATH nextPath = PATH(nextNode, min(best.max_radius, nextConn.max_radius), max(best.max_inc_radius, nextNode.max_radius), best.length + nextConn.length);
+      // ML mod: If next connection has a smaller max radius, store this node pair and connection
       if (nextConn.max_radius < best.max_radius)
       {
-        //nextConn.print(cout); // ML mod debug
-        bestConn = nextConn; // FIXME alias to original connection?
+        bestConn = nextConn;
         bestCurrNode = best.currentNode;
         bestNextNode = nextNode;
       }
       else
       {
-        bestConn = best.bestConn; // FIXME alias to original connection?
+        bestConn = best.bestConn;
         bestCurrNode = best.bestStartNode;
         bestNextNode = best.bestEndNode;
       }
       PATH nextPath = PATH(bestCurrNode, bestNextNode, bestConn, nextNode, min(best.max_radius, nextConn.max_radius), max(best.max_inc_radius, nextNode.max_radius), best.length + nextConn.length);
+      // end ML mod
+      //PATH nextPath = PATH(nextNode, min(best.max_radius, nextConn.max_radius), max(best.max_inc_radius, nextNode.max_radius), best.length + nextConn.length);
       nextPath.toSink = true;
       nextPath.visitedIDs = best.visitedIDs;
       nextPath.visitedSourceIDs = best.visitedSourceIDs;
       heap.insert(nextPath);
     }
-    //cout << " Finish with connections to sink \n" << endl; // ML mod debug
 
   }
   return pair<bool,PATH> (NtoN,bestPath);
@@ -443,14 +431,22 @@ PATH TRAVERSAL_NETWORK::findMaxFreeSphere(){
 
 /* Returns the maximum diameter of a sphere that can be inside of the
    VORONOI_NETWORK .*/
-double findMaxIncludedSphere(VORONOI_NETWORK *vornet){
+double findMaxIncludedSphere(VORONOI_NETWORK *vornet)
+{
   double max = 0;
+  VOR_NODE maxNode;
   vector<VOR_NODE> ::iterator iter = vornet->nodes.begin();
-  while(iter != vornet->nodes.end()){
-      if(iter->rad_stat_sphere > max)
-	max = iter->rad_stat_sphere;
-      iter++;
+  while(iter != vornet->nodes.end())
+  {
+    if(iter->rad_stat_sphere > max)
+    {
+      max = iter->rad_stat_sphere;
+      maxNode = *iter;
+    }
+    iter++;
   }
+  // Uncomment to print location of maximum sphere
+  maxNode.print(); // ML mod
   return max;
 }
 

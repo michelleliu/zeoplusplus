@@ -399,7 +399,6 @@ void extendVorNet(VORONOI_NETWORK *vornet, VORONOI_NETWORK *newNet, DELTA_POS di
   for(int i = 0; i <= factor; i++){
 
     //Translate all of the Voronoi nodes and assign them new id's
-    //cout << "Translate all of the Voronoi nodes and assign them new id's" << endl; // ML mod debug
     for(int j = 0; j < numIDs; j++){
       VOR_NODE oldNode = vornet->nodes.at(j);
       VOR_NODE newNode;
@@ -411,11 +410,9 @@ void extendVorNet(VORONOI_NETWORK *vornet, VORONOI_NETWORK *newNet, DELTA_POS di
       if(sourceNodes->find(j) != sourceNodes->end()){
         sourceNodes->insert(idCount);
         idAliases->insert(pair<int,int> (idCount,j)); // gets source nodes in each direction
-        //cout << idCount << " " << j << endl; // ML mod debug
       }
       idCount++;
     }
-    //cout << endl; // ML mod debug
 
     //Translate all of the Voronoi edges, modifying the connectivity information as is appropriate
     for(unsigned int j = 0; j < vornet->edges.size(); j++){
@@ -461,9 +458,9 @@ void calculateFreeSphereParameters(VORONOI_NETWORK *vornet, char *filename, bool
   vector<double> freeRadResults;
   vector<double> incRadResults;
   vector<bool> NtoN;
-  vector<DIJKSTRA_NODE> startNodeResults; // ML modified
-  vector<DIJKSTRA_NODE> endNodeResults; // ML modified
-  vector<CONN> connResults; // ML modified
+  vector<DIJKSTRA_NODE> startNodeResults; // ML mod
+  vector<DIJKSTRA_NODE> endNodeResults; // ML mod
+  vector<CONN> connResults; // ML mod
 
   DELTA_POS directions [3] = {DELTA_POS(1,0,0), DELTA_POS(0,1,0), DELTA_POS(0,0,1)};
   for(unsigned int i = 0; i < 3; i++){
@@ -475,7 +472,6 @@ void calculateFreeSphereParameters(VORONOI_NETWORK *vornet, char *filename, bool
     DIJKSTRA_NETWORK dnet;
     DIJKSTRA_NETWORK::buildDijkstraNetwork(&newNet,&dnet);
 
-    //cout << "Total number of nodes in dijkstra net " << dnet.nodes.size() << endl; // ML mod debug
 
     TRAVERSAL_NETWORK analyzeNet = TRAVERSAL_NETWORK(directions[i].x,directions[i].y,directions[i].z, &dnet);
     pair<bool,PATH> results = analyzeNet.findMaxFreeSphere(&idAliases, &sourceNodes);
@@ -484,10 +480,11 @@ void calculateFreeSphereParameters(VORONOI_NETWORK *vornet, char *filename, bool
     incRadResults.push_back(2*results.second.max_inc_radius);
     NtoN.push_back(results.first);
 
-    // ML mod
+    // ML mod store start/end nodes and connection for max free sphere
     startNodeResults.push_back(results.second.bestStartNode);
     endNodeResults.push_back(results.second.bestEndNode);
     connResults.push_back(results.second.bestConn);
+    // end ML mod
   }
 
   fstream output;
@@ -527,12 +524,13 @@ void calculateFreeSphereParameters(VORONOI_NETWORK *vornet, char *filename, bool
 
     for(unsigned int i = 0; i < startNodeResults.size(); i++)
     {
+      output << "\n\n";
+      output << "Voronoi edge and nodes of max sphere in direction " << i << ":\n";
+      connResults[i].print(output);
       output << "\n";
       startNodeResults[i].print(output);
       output << "\n";
       endNodeResults[i].print(output);
-      output << "\n";
-      connResults[i].print(output);
     }
 
 

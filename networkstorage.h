@@ -298,6 +298,8 @@ public:
   std::vector<int> atomIDs;
   bool active; // flag tells if a node is taken into consideration when analyzing the framework
                // e.g. this typically will set to false after pruning the network using a probe radius
+  /* ML mod Output information about the voronoi node to the provided output stream*/
+  void print(std::ostream& out = std::cout) const;
 };
 
 /** Data structure that stores the nodes and edges that comprise a

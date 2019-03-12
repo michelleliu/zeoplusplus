@@ -522,6 +522,8 @@ void calculateFreeSphereParameters(VORONOI_NETWORK *vornet, char *filename, bool
     for(unsigned int i = 0; i < incRadResults.size(); i++)
       output << incRadResults[i] << "  ";
 
+    output << "\n\n" << "Nodes in unit cell: " << vornet->nodes.size() << "\n";
+
     for(unsigned int i = 0; i < startNodeResults.size(); i++)
     {
       output << "\n\n";

@@ -216,7 +216,7 @@ void createAdvCell(voronoicell &cell, vector<double> coords, int *idMap, VOR_CEL
     structure. */
 template<class c_option>
 bool storeVoronoiNetwork(c_option &con, ATOM_NETWORK *atmnet, VORONOI_NETWORK *vornet, double bx, double by, double bz,
-			 vector<BASIC_VCELL> &basCells, vector<int> &atomShifts, bool storeAdvCells, vector<VOR_CELL> &advCells) {
+    vector<BASIC_VCELL> &basCells, vector<int> &atomShifts, bool storeAdvCells, vector<VOR_CELL> &advCells) {
   voronoi_network vnet (con, VOR_NODE_MERGE_THRESHOLD); // data structure defined in voro++ which is not to be confused with VORONOI_NETWORK
   int id;
   double vvol=0,x,y,z,r;
@@ -237,90 +237,90 @@ bool storeVoronoiNetwork(c_option &con, ATOM_NETWORK *atmnet, VORONOI_NETWORK *v
   vector<int> cellIDs;
   int **cellInfo;
   cellInfo = new int*[atmnet->numAtoms];
-    if(vl.start()) {
-      do {
-	if(con.compute_cell(c,vl)) {
-	  vvol+=c.volume();
-	  vl.pos(id,x,y,z,r);
+  if(vl.start()) {
+    do {
+      if(con.compute_cell(c,vl)) {
+        vvol+=c.volume();
+        vl.pos(id,x,y,z,r);
 
-	  int *map;
-	  vector<double> coords;
-	  c.vertices(atmnet->atoms[id].x, atmnet->atoms[id].y, atmnet->atoms[id].z, coords);
+        int *map;
+        vector<double> coords;
+        c.vertices(atmnet->atoms[id].x, atmnet->atoms[id].y, atmnet->atoms[id].z, coords);
 
-	  numNodes.push_back(c.p);
-	  cellIDs.push_back(id);
-	  vertices.push_back(coords);
+        numNodes.push_back(c.p);
+        cellIDs.push_back(id);
+        vertices.push_back(coords);
 
-	  vnet.add_to_network(c,id,x,y,z,r, map);
+        vnet.add_to_network(c,id,x,y,z,r, map);
 
-	  cellInfo[cellIndex] = map;
+        cellInfo[cellIndex] = map;
 
-	  if(storeAdvCells){
-	    VOR_CELL newCell;
-	    createAdvCell(c, coords, map, newCell);
-	    advCells[id] = newCell;
-	  }
-	}
-	else {
-	  numNodes.push_back(0);
-	  cellIDs.push_back(-1);
-	  vertices.push_back(vector<double>());
+        if(storeAdvCells){
+          VOR_CELL newCell;
+          createAdvCell(c, coords, map, newCell);
+          advCells[id] = newCell;
+        }
+      }
+      else {
+        numNodes.push_back(0);
+        cellIDs.push_back(-1);
+        vertices.push_back(vector<double>());
 
-	  cellInfo[cellIndex] = NULL;
-	}
-	cellIndex++;
-      } while(vl.inc());
+        cellInfo[cellIndex] = NULL;
+      }
+      cellIndex++;
+    } while(vl.inc());
+  }
+  else {
+    fputs("Error: Unable to begin Voronoi decomposition.\nExiting...\n",stderr);
+    exit(1);
+  }
+
+  // Carry out the volume check
+  printf("Volume check:\n  Total domain volume  = %f\n",bx*by*bz);
+  printf("  Total Voronoi volume = %f\n", vvol);
+  //    if(abs(vvol - bx*by*bz) > 0.00001) {}
+  //    if(abs(vvol - bx*by*bz) > 0.0001) {
+  //      fputs("Error: Voronoi volume check failed.\nExiting...\n",stderr);
+  //      exit(1);
+  //    }
+  double box_vol = bx*by*bz;
+  double error_percent = 100*abs(vvol - box_vol)/box_vol;
+  double error_percent_tolerance = 0.001; // former (before Voro++ fit default = 0.1;
+  if(error_percent > error_percent_tolerance) {
+    printf("Error: Voronoi volume check failed (%.3f%% error, > %.3f%% tolerance).\nExiting...\n", error_percent, error_percent_tolerance);
+    return false;
+    //      exit(1);
+  }
+
+  cout << "Voronoi decomposition finished. Rerouting Voronoi network information." << "\n";
+
+  vnet.store_network(vornet->nodes, vornet->edges, false);
+  for(int i = 0; i < atmnet->numAtoms; i++){
+    if(numNodes[i] == 0){
+      continue;
     }
-    else {
-      fputs("Error: Unable to begin Voronoi decomposition.\nExiting...\n",stderr);
+
+    vector<int> nodeIDs;
+    vector<Point> nodeLocations;
+    if((int)vertices[i].size() != 3*numNodes[i]){
+      cerr << "Error: Improper number of node coordinates in Voronoi decomposition" << "\n"
+        << "Found " << vertices[i].size() << " but expected " << 3*numNodes[i] << "\n"
+        << "Exiting..." << "\n";
       exit(1);
     }
 
-    // Carry out the volume check
-    printf("Volume check:\n  Total domain volume  = %f\n",bx*by*bz);
-    printf("  Total Voronoi volume = %f\n", vvol);
-//    if(abs(vvol - bx*by*bz) > 0.00001) {
-//    if(abs(vvol - bx*by*bz) > 0.0001) {
-//      fputs("Error: Voronoi volume check failed.\nExiting...\n",stderr);
-//      exit(1);
-//    }
-    double box_vol = bx*by*bz;
-    double error_percent = 100*abs(vvol - box_vol)/box_vol;
-    double error_percent_tolerance = 0.001; // former (before Voro++ fit default = 0.1;
-    if(error_percent > error_percent_tolerance) {
-      printf("Error: Voronoi volume check failed (%.3f%% error, > %.3f%% tolerance).\nExiting...\n", error_percent, error_percent_tolerance);
-      return false;
-//      exit(1);
+    for(int j = 0; j < numNodes[i]; j++){
+      nodeLocations.push_back(Point(vertices[i][3*j], vertices[i][3*j+1], vertices[i][3*j+2])) ;
+      nodeIDs.push_back(cellInfo[i][j*4]);
     }
 
-    cout << "Voronoi decomposition finished. Rerouting Voronoi network information." << "\n";
-
-    vnet.store_network(vornet->nodes, vornet->edges, false);
-    for(int i = 0; i < atmnet->numAtoms; i++){
-      if(numNodes[i] == 0){
-	continue;
-      }
-
-      vector<int> nodeIDs;
-      vector<Point> nodeLocations;
-      if((int)vertices[i].size() != 3*numNodes[i]){
-	cerr << "Error: Improper number of node coordinates in Voronoi decomposition" << "\n"
-	     << "Found " << vertices[i].size() << " but expected " << 3*numNodes[i] << "\n"
-	     << "Exiting..." << "\n";
-	exit(1);
-      }
-
-      for(int j = 0; j < numNodes[i]; j++){
-	nodeLocations.push_back(Point(vertices[i][3*j], vertices[i][3*j+1], vertices[i][3*j+2])) ;
-	nodeIDs.push_back(cellInfo[i][j*4]);
-      }
-
-      basCells[cellIDs[i]] = BASIC_VCELL(nodeLocations, nodeIDs);
-      delete [] cellInfo[i];
-    }
-    delete [] cellInfo;
-    cout << "Finished rerouting information." << "\n";
-    return true;
+    basCells[cellIDs[i]] = BASIC_VCELL(nodeLocations, nodeIDs);
+    delete [] cellInfo[i];
+  }
+  delete [] cellInfo;
+  cout << "Finished rerouting information." << "\n";
+  return true;
 }
 
 /** Extends the provided unit cell in the x, y and z directions using

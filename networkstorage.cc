@@ -631,7 +631,7 @@ VOR_NODE::VOR_NODE(double myX, double myY, double myZ,
 /* ML mod Output information about the voronoi node to the provided output stream*/
 void VOR_NODE::print(std::ostream& out) const
 {
-  out << "vor node   X: " << x << "    Y: " << y << "    Z:" << z
+  out << "vor node   X: " << x << "    Y: " << y << "    Z: " << z
     << "  max_sphere_diam: " << rad_stat_sphere*2
     << "\n";
 }

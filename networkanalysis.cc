@@ -434,6 +434,8 @@ PATH TRAVERSAL_NETWORK::findMaxFreeSphere(){
 double findMaxIncludedSphere(VORONOI_NETWORK *vornet)
 {
   double max = 0;
+  int maxidcount = 0; // ML mod
+  int counter = 0;
   VOR_NODE maxNode;
   vector<VOR_NODE> ::iterator iter = vornet->nodes.begin();
   while(iter != vornet->nodes.end())
@@ -442,10 +444,13 @@ double findMaxIncludedSphere(VORONOI_NETWORK *vornet)
     {
       max = iter->rad_stat_sphere;
       maxNode = *iter;
+      maxidcount = counter;
     }
     iter++;
+    counter++; // ML mod
   }
   // Uncomment to print location of maximum sphere
+  cout << "Max sphere node: " << maxidcount << "\n" ; // ML mod
   maxNode.print(); // ML mod
   return max;
 }

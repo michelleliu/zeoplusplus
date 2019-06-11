@@ -1,5 +1,7 @@
-# Modified extended output version for use with "Geometric Overlap" method of nonspherical probe accessibility analysis
-## Code modifications by Yifei Michelle Liu, last updated June 2019
+# Zeo++ with Modified Extended Output
+
+**Version for use with "Geometric Overlap" method of nonspherical probe accessibility analysis**
+**Code modifications by Yifei Michelle Liu, last updated June 2019**
 
 Zeo++, high-throughput analysis of crystalline porous materials
 By Maciej Haranczyk, Chris H Rycroft, Richard L Martin, Thomas F Willems

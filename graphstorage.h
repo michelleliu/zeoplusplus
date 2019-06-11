@@ -47,7 +47,9 @@ public:
 
     /* Output information about the connection to the provided output stream*/
     void print(std::ostream& out = std::cout) const;
-    //void print();
+
+    /* ML mod: Output information about the connection to the provided output stream in a concise format*/
+    void printConcise(std::ostream& out = std::cout) const;
 };
 
 /* Represents a node in a graph data structure created from a Voronoi network. Stores
@@ -70,6 +72,12 @@ public:
 
     /** Output information about the node to the provided output stream. Default is std::cout*/
     void print(std::ostream &out = std::cout) const;
+
+    /** ML mod: Output position of the node to the provided output stream in a concise format. */
+    void printConcisePos(std::ostream &out = std::cout) const;
+
+    /** ML mod: Output id of the node to the provided output stream in a concise format. */
+    void printConciseID(std::ostream &out = std::cout) const;
 };
 
 /** Data structure that represents a set of nodes and edges created from a

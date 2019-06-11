@@ -86,9 +86,14 @@ CONN::CONN(int myFrom, int myTo, double len, double maxR, DELTA_POS deltaP){
 
 /* Output information about the connection to the provided output stream*/
 void CONN::print(ostream &out) const{
-    out << from << "->" << to << "   Length:" << length
-    << "   Max radius:" << max_radius << "   Change in Unit Cell: ("
-    << deltaPos.x << "," << deltaPos.y << "," << deltaPos.z << ")" << "\n";
+    out << from << " -> " << to << "   Length: " << length
+    << "   Max radius: " << max_radius << "   Change in Unit Cell: ( "
+    << deltaPos.x << " " << deltaPos.y << " " << deltaPos.z << " )" << "\n";
+}
+
+/* ML mod: Output information about the connection to the provided output stream in a concise format*/
+void CONN::printConcise(ostream &out) const{
+    out << " " << deltaPos.x << " " << deltaPos.y << " " << deltaPos.z << " " << max_radius ;
 }
 
 /* End of CONN functionality*/
@@ -111,14 +116,23 @@ DIJKSTRA_NODE::DIJKSTRA_NODE(int myID, double myX, double myY, double myZ, doubl
 
 /** Output information about the node to the provided output stream. */
 void DIJKSTRA_NODE::print(ostream &out) const {
-    out << " Node info:" << "\n"
-    << "   id:  " << id << "\n" //"    X: " << x << "    Y: " << y << "    Z: " << z << "\n"
-    << "        " << x << " " << y << " " << z << "\n"
+    out // << " Node info:" << "\n" // ML mod
+    << " Node id:  " << id << "   pos: " << x << " " << y << " " << z << "\n"
     << "   Connections:" << "\n";
     for(unsigned int i = 0; i<connections.size(); i++){
         out << "     ";
         connections.at(i).print(out);
     }
+}
+
+/** ML mod: Output position of the node to the provided output stream in a concise format. */
+void DIJKSTRA_NODE::printConcisePos(ostream &out) const {
+    out << " " << x << " " << y << " " << z ;
+}
+
+/** ML mod: Output id of the node to the provided output stream in a concise format. */
+void DIJKSTRA_NODE::printConciseID(ostream &out) const {
+    out << " " << id ;
 }
 
 /* End of DIJKSTRA_NODE functionality*/

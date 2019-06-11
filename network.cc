@@ -522,17 +522,28 @@ void calculateFreeSphereParameters(VORONOI_NETWORK *vornet, char *filename, bool
     for(unsigned int i = 0; i < incRadResults.size(); i++)
       output << incRadResults[i] << "  ";
 
-    output << "\n\n" << "Nodes in unit cell: " << vornet->nodes.size() << "\n";
+    output << "\n";
+    output << "PLD max dir: id1 id2 x1 y1 z1 x2 y2 z2 dx dy dz r\n";
+    output << maxdir ;
+    startNodeResults[maxdir].printConciseID(output);
+    endNodeResults[maxdir].printConciseID(output);
+    startNodeResults[maxdir].printConcisePos(output);
+    endNodeResults[maxdir].printConcisePos(output);
+    connResults[maxdir].printConcise(output);
+    output << "\n" << "Nodes in unit cell: " << vornet->nodes.size() << "\n";
+    output << "PLD all dirs: id1 id2 x1 y1 z1 x2 y2 z2 dx dy dz r\n";
 
     for(unsigned int i = 0; i < startNodeResults.size(); i++)
     {
-      output << "\n\n";
-      output << "Voronoi edge and nodes of max sphere in direction " << i << ":\n";
-      connResults[i].print(output);
+      //output << "\n";
+      //output << "Voronoi edge and nodes of max sphere in direction " << i << ":\n";
+      output << i;
+      startNodeResults[i].printConciseID(output);
+      endNodeResults[i].printConciseID(output);
+      startNodeResults[i].printConcisePos(output);
+      endNodeResults[i].printConcisePos(output);
+      connResults[i].printConcise(output);
       output << "\n";
-      startNodeResults[i].print(output);
-      output << "\n";
-      endNodeResults[i].print(output);
     }
 
 
